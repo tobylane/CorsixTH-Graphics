@@ -1,4 +1,5 @@
 #!/bin/sh
 # Build documentation.
+set -eax
 doxygen doxy.cfg
 echo "Output in doc/html/index.html"

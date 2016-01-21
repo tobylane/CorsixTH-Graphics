@@ -20,9 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set -e -u -x
+set -exa
 
-CCFLAGS="-Wall -g"
+if [[ "$OSTYPE" == darwin* ]]
+	then CCFLAGS="-std=c++11 -g -Wall -Werror -pedantic -Wno-deprecated-register"
+else CCFLAGS="-std=c++0x -g -Wall -Werror -pedantic"
+fi
 FLEXFLAGS=
 
 bison --defines=tokens.h --output=parser.cpp parser.y
@@ -36,4 +39,3 @@ g++ $CCFLAGS -c -o image.o image.cpp
 g++ $CCFLAGS -c -o storage.o storage.cpp
 
 g++ $CCFLAGS -o encoder parser.o scanner.o main.o ast.o image.o storage.o -lpng
-
