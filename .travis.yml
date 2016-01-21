@@ -1,0 +1,30 @@
+os:
+ - linux
+ - osx
+language: cpp
+compiler: gcc
+sudo: false
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - bison
+      - flex
+      - doxygen
+      - g++-5
+      - libpng
+
+before_install:
+ - if [[ $TRAVIS_OS_NAME = linux ]]; then true; fi
+ - if [[ $TRAVIS_OS_NAME = osx   ]]; then brew install libpng flex bison; fi
+
+install:
+  - cd AnimationEncoder
+  - ./mk
+
+script:
+ - if [[ $TRAVIS_OS_NAME = linux ]]; then ./mkdocs; fi
+
+after_success:
+ - ./encoder ../ground_tiles.txt ground
