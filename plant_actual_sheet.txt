@@ -1,0 +1,263 @@
+// Plant 'animations'
+
+animation "plant_new" {
+    view = north;
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 0;
+            top = 0;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 64;
+            top = 0;
+            width = 58;
+            height = 74;
+        }
+    }
+
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 128;
+            top = 0;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 192;
+            top = 0;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 256;
+            top = 0;
+            width = 38;
+            height = 74;
+        }
+    }
+}
+
+
+animation "plant_new" {
+    view = east;
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 0;
+            top = 74;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 64;
+            top = 74;
+            width = 58;
+            height = 74;
+        }
+    }
+
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 128;
+            top = 74;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 192;
+            top = 74;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 256;
+            top = 74;
+            width = 38;
+            height = 74;
+        }
+    }
+}
+
+animation "plant_new" {
+    view = south;
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 0;
+            top = 148;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 64;
+            top = 148;
+            width = 58;
+            height = 74;
+        }
+    }
+
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 128;
+            top = 148;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 192;
+            top = 148;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 256;
+            top = 74;
+            width = 38;
+            height = 74;
+        }
+    }
+}
+
+animation "plant_new" {
+    view = west;
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 0;
+            top = 222;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 64;
+            top = 222;
+            width = 58;
+            height = 74;
+        }
+    }
+
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 128;
+            top = 222;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 192;
+            top = 222;
+            width = 58;
+            height = 74;
+        }
+    }
+
+    frame {
+        element {
+            base = "Models/Xuxo/plant_sheet.png";
+            x_offset = -19;
+            y_offset = -40;
+            left = 256;
+            top = 222;
+            width = 38;
+            height = 74;
+        }
+    }
+}
+
