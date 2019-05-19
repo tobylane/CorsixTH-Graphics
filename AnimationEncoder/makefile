@@ -20,24 +20,24 @@
 SHELL := /bin/sh
 
 # Assume the user has specified the standard, or c89
-override CCFLAGS += -Wall
+override CXXFLAGS += -Wall
 
 ifeq ($(shell uname -s),Darwin) # macOS
 	# Bundled, un-updated bison introduce registers which cause non-repo code warnings
-	override CCFLAGS += -Wno-deprecated-register
+	override CXXFLAGS += -Wno-deprecated-register
 endif
 
 all:   ## Make the Animation Encoder
 	bison --defines=tokens.h --output=parser.cpp parser.y
 	flex --outfile=scanner.cpp scanner.l
 
-	$(CXX) $(CCFLAGS) -c -o ast.o ast.cpp
-	$(CXX) $(CCFLAGS) -c -o parser.o parser.cpp
-	$(CXX) $(CCFLAGS) -c -o scanner.o scanner.cpp
-	$(CXX) $(CCFLAGS) -c -o main.o main.cpp
-	$(CXX) $(CCFLAGS) -c -o image.o image.cpp
-	$(CXX) $(CCFLAGS) -c -o storage.o storage.cpp
-	$(CXX) $(CCFLAGS) -o encoder parser.o scanner.o main.o ast.o image.o storage.o -lpng
+	$(CXX) $(CXXFLAGS) -c -o ast.o ast.cpp
+	$(CXX) $(CXXFLAGS) -c -o parser.o parser.cpp
+	$(CXX) $(CXXFLAGS) -c -o scanner.o scanner.cpp
+	$(CXX) $(CXXFLAGS) -c -o main.o main.cpp
+	$(CXX) $(CXXFLAGS) -c -o image.o image.cpp
+	$(CXX) $(CXXFLAGS) -c -o storage.o storage.cpp
+	$(CXX) $(CXXFLAGS) -o encoder parser.o scanner.o main.o ast.o image.o storage.o -lpng
 
 clean: ## Remove generated files
 	$(RM) encoder parser.o scanner.o main.o ast.o image.o storage.o docs
