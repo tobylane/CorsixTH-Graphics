@@ -1,0 +1,39 @@
+#
+
+trigger:
+  batch: true
+  branches:
+    include: ['*']
+  tags:
+    include: ['*']
+
+jobs:
+- job: Linux
+  dependsOn: []
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - script: apt-get install -y bison flex #g++-5
+  - bash: cd AnimationEncoder; VERBOSE=1 make
+  - task: ArchiveFiles@2
+  - task: cURLUploader@2
+    inputs:
+      files: '**\*.zip'
+      url: 'https://0x0.st'
+
+- job: Docs
+  dependsOn: []
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - script: apt-get install -y doxygen
+  - bash: cd AnimationEncoder; make docs
+
+
+jobs:
+- job: Test
+  dependsOn: [Linux]
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - bash: cd AnimationEncoder; make test
