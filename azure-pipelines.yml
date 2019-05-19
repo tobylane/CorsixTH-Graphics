@@ -21,19 +21,19 @@ jobs:
       files: '**\*.zip'
       url: 'https://0x0.st'
 
-- job: Docs
-  dependsOn: []
-  pool:
-    vmImage: 'ubuntu-16.04'
-  steps:
-  - script: apt-get install -y doxygen
-  - bash: cd AnimationEncoder; make docs
-
-
-jobs:
 - job: Test
   dependsOn: [Linux]
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
   - bash: cd AnimationEncoder; make test
+
+- job: Docs
+  #dependsOn: [Test]
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - script: apt-get install -y doxygen
+  - bash: cd AnimationEncoder; make docs
+  # deploy docs (on main/master)
+# job deploy, depend on test, sha256, post to draft github release (on tag)
