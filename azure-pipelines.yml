@@ -16,10 +16,11 @@ jobs:
   - script: sudo apt-get install -y bison flex #g++-5
   - bash: cd AnimationEncoder; VERBOSE=1 make
   - task: ArchiveFiles@2
-  - task: cURLUploader@2
-    inputs:
-      files: '**\*.zip'
-      url: 'https://0x0.st'
+  - bash: ls -R
+#  - task: cURLUploader@2
+#    inputs:
+#      files: '**\*.zip'
+#      url: 'https://0x0.st'
 
 - job: Test
   dependsOn: [Linux]
