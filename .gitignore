@@ -4,4 +4,6 @@ Thumbs.db
 
 # Generated files
 *.o
-encoder
+AnimationEncoder/encoder
+AnimationEncoder/doc/
+
