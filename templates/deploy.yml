@@ -1,0 +1,65 @@
+# template to compress given path to a filename based on prefix, date,
+#   platform, repo, branch, if pr, git short ref and upload
+# todo: checksums, signing
+# use as
+# - template: scripts/templates/deploy.yml  # Template reference
+#  parameters:
+#    path: mac /fresh/CorsixTH/ windows /build/CorsixTH/RelWithDebInfo/
+#    prefix: 'Cth'
+---
+parameters:
+  prefix: 'build'
+  path: 'fresh'
+  mainrepo: ''
+# url? https://transfer.sh, https://0x0.st/, etc
+# format? tricky to deal with tar types
+
+steps:
+  - bash: |
+      ref=`git rev-parse --short HEAD`
+      if [ $(Build.Reason) = "PullRequest" ]; then name="pr-$SYSTEM_PULLREQUESTNUMBER-$ref"
+      elif [ $(Build.Repository.Name) = "${{ parameters.mainrepo }}" ] && [ $(Build.SourceBranchName) = master ]
+        then name=$ref
+      elif [ $(Build.Repository.Name) = "${{ parameters.mainrepo }}" ] && [[ $(Build.SourceBranch) = refs/tags/* ]]
+        then name=${Build.SourceBranch:10}  # will trigger on tags on other branches
+      else name="$(Build.Repository.Name)-$(Build.SourceBranchName)-$ref"
+      fi
+      name="${{ parameters.prefix }}-$(date +"%Y%m%d")-${name//'/'/'-'}-$AGENT_JOBNAME.zip";
+      echo "##vso[task.setvariable variable=name;isOutput=true]$name"; echo $name
+    displayName: Deploy - Naming
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(Build.SourcesDirectory)/${{ parameters.path }}'
+      archiveFile: '$(Agent.JobName).zip'
+      verbose: true
+    displayName: Deploy - Archiving
+  - task: cURLUploader@2
+    inputs:
+      files: '$(Agent.JobName).zip'
+      url: 'https://transfer.sh/$(NAME)'
+      authType: userAndPass
+      remotePath:
+    displayName: Deploy - Uploading
+
+# and(eq( variables['Build.Repository.Name'], '${{ parameters.mainrepo }}'),
+# startsWith(variables['build.SourceBranch'], 'refs/head/') )
+# or commit message contains tagtest
+# then package (msi-Run the script WindowsInstaller/Win32Script.nsi using NSIS,
+#   dmg-cthpackage, fpm?), and upload/release those
+
+  - task: GitHubRelease@0
+    #condition: false
+    displayName: Deploy - Github draft releasing
+    inputs:
+      gitHubConnection: tobylane
+      repository: '$(Build.Repository.Name)'
+      action: create
+      title: release title
+      releaseNotesSource: description
+      releaseNotes: body
+      # assets: win.zip win.msi mac.dmg source.tar.gz.asc source.tar.gz.pgp
+      # how to include assets from multiple agents?
+      isDraft: true
+      # isPreRelease: maybe
+      addChangeLog: false
+      continueOnError: true
