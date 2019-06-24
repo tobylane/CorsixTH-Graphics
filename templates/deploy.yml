@@ -41,25 +41,4 @@ steps:
       url: 'https://transfer.sh/$(name)'
       authType: userAndPass
       remotePath:
-# and(eq( variables['Build.Repository.Name'], '$${{ parameters.mainrepo }}'),
-# startsWith(variables['build.sourceBranch'], 'refs/head/') )
-# or commit message contains tagtest
-# then package (msi-Run the script WindowsInstaller/Win32Script.nsi using NSIS,
-#   dmg-cthpackage, fpm?), and upload/release those
 
-  - task: GitHubRelease@0
-    condition: false
-    displayName: 'Create GitHub Release'
-    inputs:
-      gitHubConnection: github
-      repository: $(BUILD_REPOSITORYNAME)
-      action: create
-      title: release title
-      releaseNotesSource: description
-      releaseNotes: body
-      # assets: win.zip win.msi mac.dmg source.tar.gz.asc source.tar.gz.pgp
-      # how to include assets from multiple agents?
-      isDraft: true
-      # isPreRelease: maybe
-      addChangeLog: false
-      continueOnError: true
