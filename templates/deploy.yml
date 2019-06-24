@@ -48,6 +48,7 @@ steps:
 #   dmg-cthpackage, fpm?), and upload/release those
 
   - task: GitHubRelease@0
+    condition: false
     displayName: 'Create GitHub Release'
     inputs:
       gitHubConnection: github
@@ -61,3 +62,4 @@ steps:
       isDraft: true
       # isPreRelease: maybe
       addChangeLog: false
+      continueOnError: true
