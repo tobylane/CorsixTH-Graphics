@@ -1,0 +1,34 @@
+#
+---
+trigger:
+  batch: true
+  branches:
+    include: ['*']
+    exclude:
+      - gh-pages
+  tags:
+    include: ['*']
+
+jobs:
+  - job: Linux
+    dependsOn: []
+    pool:
+      vmImage: 'ubuntu-16.04'
+    steps:
+      - script: sudo apt-get install bison flex doxygen
+        displayName: Install requirements
+      - bash: cd AnimationEncoder; VERBOSE=1 make
+        displayName: Build
+      - bash: make test || true
+        displayName: Test
+      - bash: make docs
+        displayName: Make docs
+      - template: templates/deploy.yml
+        parameters:
+          path: AnimationEncoder/encoder
+          mainrepo: tobylane/CorsixTH-Graphics
+      - template: templates/docs.yml
+        parameters:
+          target: docs
+          path: doc/html/
+          mainrepo: tobylane/CorsixTH-Graphics
