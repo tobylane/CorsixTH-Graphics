@@ -12,7 +12,9 @@ trigger:
 pool:
   vmImage: 'ubuntu-16.04'
 steps:
-  - script: sudo apt-get install bison flex
+  - checkout: self  # Must be first in this file
+    persistCredentials: true
+  - script: sudo apt-get install bison flex  # Cache this
     displayName: Install requirements
   - bash: cd $(Build.SourcesDirectory)/AnimationEncoder; VERBOSE=1 make
     displayName: Build
@@ -23,8 +25,6 @@ steps:
     parameters:
       path: AnimationEncoder/encoder
       mainrepo: tobylane/CorsixTH-Graphics
-  - checkout: self  # Must be in this file
-    persistCredentials: true
   - template: templates/docs.yml
     parameters:
       makepath: AnimationEncoder
