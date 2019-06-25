@@ -4,7 +4,7 @@
 # use as
 # - template: scripts/templates/deploy.yml  # Template reference
 #  parameters:
-#    path: mac /fresh/CorsixTH/ windows /build/CorsixTH/Release/
+#    path: mac /fresh/CorsixTH/ windows /build/CorsixTH/RelWithDebInfo/
 #    prefix: 'Cth'
 ---
 parameters:
@@ -28,17 +28,40 @@ steps:
       fi
       name="$${{ parameters.prefix }}-$(date +"%Y%m%d")-$name-$AGENT_JOBNAME.zip";
       ##vso[task.setvariable variable=name]$name; echo $name
-      # cp README.txt LICENSE.txt CONTRIBUTING.txt changelog.txt ${{ parameters.path }}
-    displayName: Naming item
+    displayName: Deploy - Naming
   - task: ArchiveFiles@2
     inputs:
       rootFolderOrFile: '$(Build.SourcesDirectory)/${{ parameters.path }}'
       archiveFile: '$(Agent.JobName).zip'
       verbose: true
+    displayName: Deploy - Archiving
   - task: cURLUploader@2
     inputs:
       files: '$(Agent.JobName).zip'
       url: 'https://transfer.sh/$(name)'
       authType: userAndPass
       remotePath:
+    displayName: Deploy - Uploading
 
+# and(eq( variables['Build.Repository.Name'], '$${{ parameters.mainrepo }}'),
+# startsWith(variables['build.sourceBranch'], 'refs/head/') )
+# or commit message contains tagtest
+# then package (msi-Run the script WindowsInstaller/Win32Script.nsi using NSIS,
+#   dmg-cthpackage, fpm?), and upload/release those
+
+  - task: GitHubRelease@0
+    #condition: false
+    displayName: Deploy - Github draft releasing
+    inputs:
+      gitHubConnection: tobylane
+      repository: $(BUILD_REPOSITORYNAME)
+      action: create
+      title: release title
+      releaseNotesSource: description
+      releaseNotes: body
+      # assets: win.zip win.msi mac.dmg source.tar.gz.asc source.tar.gz.pgp
+      # how to include assets from multiple agents?
+      isDraft: true
+      # isPreRelease: maybe
+      addChangeLog: false
+      continueOnError: true

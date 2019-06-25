@@ -1,4 +1,4 @@
-# template to build docs and on given condition deploy them to gh-pages
+# template to build docs and on given condition (tag, requires trigger on tags) deploy them to gh-pages
 # may need https://www.aaron-powell.com/posts/2019-05-24-azure-pipeline-templates-and-parameters/
 # recommend idempotence, eg no timestamps.
 # requires a make target (ie after cmake/configure, can be minimal, ie with features turned off, eg -DWITH_AUDIO=OFF), existing gh-pages branch - make with
@@ -9,49 +9,48 @@
 #   condition: not(eq(variables['build.sourceBranch'], 'refs/heads/gh-pages'))  # Or exclude the branch
 ---
 parameters:
-  prefix: 'Documentation from commit'
-  path: 'doc'
+  makepath: 'build'
+  path: 'build/doc/'
   target: 'doc'
   mainrepo: ''
   frontpage: '/DoxyGen/index.md'
   email: 'botty@mc.botface'
   name: 'RRS Sir David Attenborough'
+  prefix: 'Documentation from commit'
 
 steps:
   - checkout: self  # test if this works from a template, if not move it to use as
     persistCredentials: true
   - script: sudo apt-get install -V doxygen pandoc
     condition: eq(variables['Agent.OS'], 'Linux')
-    displayName: Install Linux requirements for documentation
+    displayName: Docs - Install Linux requirements
   - script: brew install doxygen pandoc
     condition: eq(variables['Agent.OS'], 'macOS')
-    displayName: Install macOS requirements for documentation
+    displayName: Docs - Install macOS requirements
   - script: choco install doxygen.install pandoc
     condition: eq(variables['Agent.OS'], 'Windows NT')
-    displayName: Install Windows requirements for documentation
+    displayName: Docs - Install Windows requirements
 
   - bash: |
-      cd $BUILD_SOURCESDIRECTORY/build/
+      cd $(Build.SourcesDirectory)/$${{ parameters.makepath }}
       make $${{ parameters.target }}
       if [ -e $${{ parameters.frontpage }} ]
-        then pandoc -f markdown -t html -o $${{ parameters.path }}/index.html $${{ parameters.frontpage }}
+        then pandoc -f markdown -t html -o $(Build.SourcesDirectory)/$${{ parameters.path }}/index.html \
+          $(Build.SourcesDirectory)/$${{ parameters.frontpage }}
       fi
-    displayName: Build documentation
+    displayName: Docs - Build
 
   - bash: |
-     if [ $BUILD_REPOSITORYNAME = "$${{ parameters.mainrepo }}" ] && [ $BUILD_SOURCEBRANCH = refs/tags/* ]
-     # or commit message contains tagtest
-       then
-       commit="$(git rev-parse --short HEAD)"
+     if [ $BUILD_REPOSITORYNAME = "$${{ parameters.mainrepo }}" ] && [ $BUILD_SOURCEBRANCH = refs/tags/* ] || true
+       then commit="$(git rev-parse --short HEAD)"
        git config --global user.email "$${{ parameters.email }}"
        git config --global user.name "$${{ parameters.name }}"
        git checkout gh-pages
-       mv build/$${{ parameters.path }}/* .
-       rm -rf build/
+       mv $${{ parameters.path }}/* .
+       rm -rf $${{ parameters.path }}/
        git add .
        git commit -m "Documentation from $commit [skip ci]" && git push --force origin HEAD:refs/heads/gh-pages \
         || echo "No update"
      fi
-    displayName: Deploy documentation
-   # condition: and(eq( variables['Build.Repository.Name'], '$${{ parameters.mainrepo }}'),
-   # startsWith(variables['build.sourceBranch'], 'refs/head/') )
+    displayName: Docs - Deploy
+    condition: eq( variables['Build.Repository.Name'], '$${{ parameters.mainrepo }}')
