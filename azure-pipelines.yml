@@ -12,6 +12,8 @@ trigger:
 pool:
   vmImage: 'ubuntu-16.04'
 steps:
+  - checkout: self  # Must be in this file
+    persistCredentials: true
   - script: sudo apt-get install bison flex
     displayName: Install requirements
   - bash: cd $(Build.SourcesDirectory)/CorsixTH-Graphics/AnimationEncoder; VERBOSE=1 make

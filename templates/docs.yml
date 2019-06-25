@@ -19,8 +19,6 @@ parameters:
   prefix: 'Documentation from commit'
 
 steps:
-  - checkout: self  # test if this works from a template, if not move it to use as
-    persistCredentials: true
   - script: sudo apt-get install -V doxygen pandoc
     condition: eq(variables['Agent.OS'], 'Linux')
     displayName: Docs - Install Linux requirements
