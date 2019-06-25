@@ -45,9 +45,11 @@ steps:
        then commit="$(git rev-parse --short HEAD)"
        git config --global user.email "${{ parameters.email }}"
        git config --global user.name "${{ parameters.name }}"
+       git reset --hard HEAD || true
+       cd $(Build.SourcesDirectory)
        git checkout gh-pages
-       mv ${{ parameters.path }}/* .
-       rm -rf ${{ parameters.path }}/
+       mv ${{ parameters.makepath }}/${{ parameters.path }}/* .
+       rm -rf ${{ parameters.makepath }}/
        git add .
        git commit -m "Documentation from $commit [skip ci]" && git push --force origin HEAD:refs/heads/gh-pages \
         || echo "No update"
