@@ -18,15 +18,15 @@ steps:
   - bash: |
       ref=$(git rev-parse --short HEAD)
       if [ $BUILD_REASON = "PullRequest" ]; then name="pr-$SYSTEM_PULLREQUESTNUMBER-$ref"
-      elif [ $BUILD_REPOSITORYNAME != "$${{ parameters.mainrepo }}" ] || \
-        [ $BUILD_REPOSITORYNAME = "$${{ parameters.mainrepo }}" && $BUILD_SOURCEBRANCHNAME != master ]
+      elif [ $BUILD_REPOSITORYNAME != "${{ parameters.mainrepo }}" ] || \
+        [ $BUILD_REPOSITORYNAME = "${{ parameters.mainrepo }}" && $BUILD_SOURCEBRANCHNAME != master ]
         then name="$BUILD_REPOSITORYNAME"/"$BUILD_SOURCEBRANCHNAME"-"$ref"
-      elif [ $BUILD_REPOSITORYNAME = "$${{ parameters.mainrepo }}" \
+      elif [ $BUILD_REPOSITORYNAME = "${{ parameters.mainrepo }}" \
         && $BUILD_SOURCEBRANCH = refs/tags/* ]  # will trigger on tags on other branches
         then name=${BUILD_SOURCEBRANCH:10}
       else name=$ref
       fi
-      name="$${{ parameters.prefix }}-$(date +"%Y%m%d")-$name-$AGENT_JOBNAME.zip";
+      name="${{ parameters.prefix }}-$(date +"%Y%m%d")-$name-$AGENT_JOBNAME.zip";
       ##vso[task.setvariable variable=name]$name; echo $name
     displayName: Deploy - Naming
   - task: ArchiveFiles@2
@@ -43,7 +43,7 @@ steps:
       remotePath:
     displayName: Deploy - Uploading
 
-# and(eq( variables['Build.Repository.Name'], '$${{ parameters.mainrepo }}'),
+# and(eq( variables['Build.Repository.Name'], '${{ parameters.mainrepo }}'),
 # startsWith(variables['build.sourceBranch'], 'refs/head/') )
 # or commit message contains tagtest
 # then package (msi-Run the script WindowsInstaller/Win32Script.nsi using NSIS,

@@ -30,25 +30,25 @@ steps:
     displayName: Docs - Install Windows requirements
 
   - bash: |
-      cd $(Build.SourcesDirectory)/$${{ parameters.makepath }}
-      make $${{ parameters.target }}
-      if [ -e $${{ parameters.frontpage }} ]
-        then pandoc -f markdown -t html -o $(Build.SourcesDirectory)/$${{ parameters.path }}/index.html \
-          $(Build.SourcesDirectory)/$${{ parameters.frontpage }}
+      cd $(Build.SourcesDirectory)/${{ parameters.makepath }}
+      make ${{ parameters.target }}
+      if [ -e ${{ parameters.frontpage }} ]
+        then pandoc -f markdown -t html -o $(Build.SourcesDirectory)/${{ parameters.path }}/index.html \
+          $(Build.SourcesDirectory)/${{ parameters.frontpage }}
       fi
     displayName: Docs - Build
 
   - bash: |
-     if [ $BUILD_REPOSITORYNAME = "$${{ parameters.mainrepo }}" ] && [ $BUILD_SOURCEBRANCH = refs/tags/* ] || true
+     if [ $BUILD_REPOSITORYNAME = "${{ parameters.mainrepo }}" ] && [ $BUILD_SOURCEBRANCH = refs/tags/* ] || true
        then commit="$(git rev-parse --short HEAD)"
-       git config --global user.email "$${{ parameters.email }}"
-       git config --global user.name "$${{ parameters.name }}"
+       git config --global user.email "${{ parameters.email }}"
+       git config --global user.name "${{ parameters.name }}"
        git checkout gh-pages
-       mv $${{ parameters.path }}/* .
-       rm -rf $${{ parameters.path }}/
+       mv ${{ parameters.path }}/* .
+       rm -rf ${{ parameters.path }}/
        git add .
        git commit -m "Documentation from $commit [skip ci]" && git push --force origin HEAD:refs/heads/gh-pages \
         || echo "No update"
      fi
     displayName: Docs - Deploy
-    condition: eq( variables['Build.Repository.Name'], '$${{ parameters.mainrepo }}')
+    condition: eq( variables['Build.Repository.Name'], '${{ parameters.mainrepo }}')
