@@ -16,12 +16,12 @@ parameters:
 
 steps:
   - bash: |
-      ref = git rev-parse --short HEAD
+      ref=$(git rev-parse --short HEAD)
       if [ $BUILD_REASON = "PullRequest" ]; then name="pr-$SYSTEM_PULLREQUESTNUMBER-$ref"
-      elif [ $BUILD_REPOSITORYNAME != "$${{ parameters.mainrepo }}" ] ||
+      elif [ $BUILD_REPOSITORYNAME != "$${{ parameters.mainrepo }}" ] || \
         [ $BUILD_REPOSITORYNAME = "$${{ parameters.mainrepo }}" && $BUILD_SOURCEBRANCHNAME != master ]
         then name="$BUILD_REPOSITORYNAME"/"$BUILD_SOURCEBRANCHNAME"-"$ref"
-      elif [ $BUILD_REPOSITORYNAME = "$${{ parameters.mainrepo }}"
+      elif [ $BUILD_REPOSITORYNAME = "$${{ parameters.mainrepo }}" \
         && $BUILD_SOURCEBRANCH = refs/tags/* ]  # will trigger on tags on other branches
         then name=${BUILD_SOURCEBRANCH:10}
       else name=$ref

@@ -18,7 +18,7 @@ steps:
     displayName: Install requirements
   - bash: cd $(Build.SourcesDirectory)/AnimationEncoder; VERBOSE=1 make
     displayName: Build
-  - bash: make test || true
+  - bash: cd $(Build.SourcesDirectory)/AnimationEncoder; make test || true
     displayName: Test
     continueOnError: true
   - template: templates/deploy.yml
