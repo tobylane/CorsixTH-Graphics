@@ -4,9 +4,11 @@
 # requires a make target (ie after cmake/configure, can be minimal, ie with features turned off, eg -DWITH_AUDIO=OFF), existing gh-pages branch - make with
 # - git checkout --orphan gh-pages; git rm -rf .;touch .nojekyll; git add .nojekyll; git commit -m "Initiate with .nojekyll"; git push origin gh-pages
 # use as, https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops#using-other-repositories
-# - template: templates/docs.yml
-#   parameters:
-#   condition: not(eq(variables['build.sourceBranch'], 'refs/heads/gh-pages'))  # Or exclude the branch
+#- checkout: self  # Must be first in this file
+#    persistCredentials: true
+#- template: templates/docs.yml
+#    parameters:
+#    condition: not(eq(variables['build.sourceBranch'], 'refs/heads/gh-pages'))  # Or exclude the branch
 ---
 parameters:
   makepath: 'build'
@@ -15,7 +17,7 @@ parameters:
   mainrepo: ''
   frontpage: '/DoxyGen/index.md'
   email: 'botty@mc.botface'
-  name: 'RRS Sir David Attenborough'
+  name: 'Deploy bot'
   prefix: 'Documentation from commit'
 
 steps:

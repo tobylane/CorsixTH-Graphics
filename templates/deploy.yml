@@ -27,7 +27,7 @@ steps:
       else name=$ref
       fi
       name="${{ parameters.prefix }}-$(date +"%Y%m%d")-$name-$AGENT_JOBNAME.zip";
-      ##vso[task.setvariable variable=name]$name; echo $name
+      echo ##vso[task.setvariable variable=name;isOutput=true;]$name
     displayName: Deploy - Naming
   - task: ArchiveFiles@2
     inputs:
