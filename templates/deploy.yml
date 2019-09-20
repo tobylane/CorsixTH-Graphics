@@ -1,8 +1,11 @@
-# template to compress given path to a filename based on prefix, date,
+# Template to compress given path to a filename based on prefix, date,
 #   platform, repo, branch, if pr, git short ref and upload
-# todo: checksums, signing
-# use as
-# - template: scripts/templates/deploy.yml  # Template reference
+# release named of https://docs.microsoft.com/en-us/azure/devops/pipelines/library/service-endpoints?view=azure-devops&tabs=yaml#sep-github
+# Todo: platform specific packages (nsis script location, dmg background path)
+#   checksums, signing,
+#   url: https://transfer.sh https://0x0.st/ etc, format: tricky to deal with tar types
+# Use as
+# - template: templates/deploy.yml  # Template reference
 #  parameters:
 #    path: mac /fresh/CorsixTH/ windows /build/CorsixTH/RelWithDebInfo/
 #    prefix: 'Cth'
@@ -10,22 +13,33 @@
 parameters:
   prefix: 'build'
   path: 'fresh'
-  mainrepo: ''
-# url? https://transfer.sh, https://0x0.st/, etc
-# format? tricky to deal with tar types
+  NSIS: 'WindowsInstaller/Win32Script.nsi'
 
 steps:
+  - task: UseRubyVersion@0
+    condition: eq(variables['Agent.OS'], 'Linux')
+    displayName: Docs - Install Ruby
   - bash: |
-      ref=`git rev-parse --short HEAD`
+      if [ $(Agent.OS) = "Windows NT" ]
+      then choco install
+      elif [ $(Agent.OS) = "macOS" ]
+      then git clone https://github.com/colinjmatt/MacOS-DMG-Creator
+        chmod +x MacOS-DMG-Creator/dmg-create
+      elif [ $(Agent.OS) = "Linux" ]
+      then echo gem install fpm
+      fi
+    displayName: Docs - Install requirements
+  - bash: |
+      ref=$(git rev-parse --short HEAD); slug=$(git config remote.origin.url | cut -d'.' -f2 | cut -d':' -f2)
       if [ $(Build.Reason) = "PullRequest" ]; then name="pr-$SYSTEM_PULLREQUESTNUMBER-$ref"
-      elif [ $(Build.Repository.Name) = "${{ parameters.mainrepo }}" ] && [ $(Build.SourceBranchName) = master ]
+      elif [ $(System.PullRequest.IsFork) = "false" ] && [ $(Build.SourceBranchName) = master ]
         then name=$ref
-      elif [ $(Build.Repository.Name) = "${{ parameters.mainrepo }}" ] && [[ $(Build.SourceBranch) = refs/tags/* ]]
+      elif [ $(System.PullRequest.IsFork) = "false" ] && [[ $(Build.SourceBranch) = refs/tags/* ]]
         then name=${Build.SourceBranch:10}  # will trigger on tags on other branches
-      else name="$(Build.Repository.Name)-$(Build.SourceBranchName)-$ref"
+      else name="$slug-$(Build.SourceBranchName)-$ref"
       fi
       name="${{ parameters.prefix }}-$(date +"%Y%m%d")-${name//'/'/'-'}-$AGENT_JOBNAME.zip";
-      echo "##vso[task.setvariable variable=name;isOutput=true]$name"; echo $name
+      echo "##vso[task.setvariable variable=name;isOutput=true]$Name"; echo $Name
     displayName: Deploy - Naming
   - task: ArchiveFiles@2
     inputs:
@@ -36,29 +50,52 @@ steps:
   - task: cURLUploader@2
     inputs:
       files: '$(Agent.JobName).zip'
-      url: 'https://transfer.sh/$(NAME)'
+      url: 'https://transfer.sh/$(Name)'
       authType: userAndPass
       remotePath:
-    displayName: Deploy - Uploading
+    displayName: Deploy - Uploading archive
 
-# and(eq( variables['Build.Repository.Name'], '${{ parameters.mainrepo }}'),
-# startsWith(variables['build.SourceBranch'], 'refs/head/') )
-# or commit message contains tagtest
-# then package (msi-Run the script WindowsInstaller/Win32Script.nsi using NSIS,
-#   dmg-cthpackage, fpm?), and upload/release those
+  - bash: |
+      if [ $(Agent.OS) = "Windows NT" ]
+      then makensis.exe /V4 ${{ parameters.NSIS }}
+      elif [ $(Agent.OS) = "macOS" ]
+      then dmg-create --background CorsixTH/build_files/CthDmgBackground.png --volname "$name" \
+        --volicon CorsixTH/CorsixTH/Icon.icns --icon-size 48 --window-size 600 337 --text-size 12 \
+        --icon CorsixTH 76 151 --app-drop-link 224 151 $name".dmg" $(Build.SourcesDirectory)/${{ parameters.path }}
+      elif [ $(Agent.OS) = "Linux" ]
+      then echo fpm help
+      fi
+    displayName: Deploy - Platform specific packaging
+    continueOnError: true
+    # bash if each-platform do that platform specific packaging and upload/release those
+    # extras? eg brew bump-formula-pr requires github credentials
+  - bash: |
+      if [ $(Agent.OS) = "Linux" ]
+       then openssl dgst -sha256 $(Build.SourcesDirectory)/${{ parameters.path }} > sha256 || true
+            git archive -o archive.zip HEAD
+            openssl dgst -sha256 archive.zip > zip.sha256
+            # pgp sign with secret
+      fi
+    displayName: Deploy - Signing
+    #condition: secret known
 
-  - task: GitHubRelease@0
-    #condition: false
-    displayName: Deploy - Github draft releasing
+  - task: GitHubRelease@1  # Reports successful when there were no tags to act on
+    condition: and( succeeded(), eq( variables['System.PullRequest.IsFork'], 'False'),
+      or( startsWith( variables['Build.SourceBranch'], 'refs/head/'),
+      contains( variables['Build.SourceVersionMessage'], 'tagtest')))
+    displayName: Deploy - Github release drafting
     inputs:
-      gitHubConnection: tobylane
-      repository: '$(Build.Repository.Name)'
+      gitHubConnection: release
+      tagSource: userSpecifiedTag
+      tag: 0.1
+      repository: '$(Build.Repository.Name)'  # Will this work here?
       action: create
       title: release title
-      releaseNotesSource: description
+      releaseNotesSource: inline
       releaseNotes: body
+      assets: zip.sha256 $(Build.SourcesDirectory)/${{ parameters.path }}
       # assets: win.zip win.msi mac.dmg source.tar.gz.asc source.tar.gz.pgp
-      # how to include assets from multiple agents?
+      # how to include assets from multiple agents? Github has the source.zip/tar.gz
       isDraft: true
       # isPreRelease: maybe
       addChangeLog: false
