@@ -1,42 +1,38 @@
-# template to build docs and on given condition (tag, requires trigger on tags) deploy them to gh-pages
-# may need https://www.aaron-powell.com/posts/2019-05-24-azure-pipeline-templates-and-parameters/
-# recommend idempotence, eg no timestamps.
-# requires a make target (ie after cmake/configure, can be minimal, ie with features turned off, eg -DWITH_AUDIO=OFF), existing gh-pages branch - make with
-# - git checkout --orphan gh-pages; git rm -rf .;touch .nojekyll; git add .nojekyll; git commit -m "Initiate with .nojekyll"; git push -f --set-upstream origin gh-pages
-# use as, https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops#using-other-repositories
-#- checkout: self  # Must be first in this file
+# Template to build docs and on tag, requires trigger on tags, deploy them to gh-pages
+# May need https://www.aaron-powell.com/posts/2019-05-24-azure-pipeline-templates-and-parameters/
+# Use as, https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops#using-other-repositories
+# Todo: upload to different repo (sameorg/samerepo:gh-pages or sameorg/github.io:master)
+# maybe parameter for matching branches (ie master to main docs, dev to dev docs)
+# - checkout: self  # Must be first in this file
 #    persistCredentials: true
-#- template: templates/docs.yml
+# - template: templates/docs.yml
 #    parameters:
-#    condition: not(eq(variables['build.sourceBranch'], 'refs/heads/gh-pages'))  # Or exclude the branch
 ---
 parameters:
   makepath: 'build'
-  path: 'build/doc/'
+  path: 'doc/html'
   target: 'doc'
-  mainrepo: ''
   frontpage: '/DoxyGen/index.md'
   email: 'botty@mc.botface'
   name: 'Deploy bot'
   prefix: 'Documentation from commit'
 
 steps:
-  - script: sudo apt-get install -V doxygen pandoc
-    condition: eq(variables['Agent.OS'], 'Linux')
-    displayName: Docs - Install Linux requirements
-  - script: brew install doxygen pandoc
-    condition: eq(variables['Agent.OS'], 'macOS')
-    displayName: Docs - Install macOS requirements
-  - script: choco install doxygen.install pandoc
-    condition: eq(variables['Agent.OS'], 'Windows NT')
-    displayName: Docs - Install Windows requirements
-
+  - bash: |
+      if [ $(Agent.OS) = "Windows NT" ]
+      then choco install doxygen.install pandoc
+      elif [ $(Agent.OS) = "macOS" ]
+      then brew install doxygen pandoc
+      elif [ $(Agent.OS) = "Linux" ]
+      then sudo apt-get install doxygen pandoc
+      fi
+    displayName: Docs - Install requirements
   - bash: |
       cd $(Build.SourcesDirectory)/${{ parameters.makepath }}
       make ${{ parameters.target }}
-      if [ -e ${{ parameters.frontpage }} ]
+      if [ -e ${{ parameters.frontpage }} ] # but not default?
         then pandoc -f markdown -t html -o $(Build.SourcesDirectory)/${{ parameters.path }}/index.html \
-          $(Build.SourcesDirectory)/${{ parameters.frontpage }}
+          $(Build.SourcesDirectory)/${{ parameters.frontpage }} || true
       fi
     displayName: Docs - Build
 
@@ -51,8 +47,10 @@ steps:
        mv ${{ parameters.makepath }}/${{ parameters.path }}/* .
        rm -rf ${{ parameters.makepath }}/
        git add .
-       git commit -m "Documentation from $commit [skip ci]" && git push --force origin HEAD:refs/heads/gh-pages \
+       git commit -m "${{ parameters.prefix }} $commit [skip ci]" && git push --force origin HEAD:refs/heads/gh-pages \
         || echo "No update"
      fi
     displayName: Docs - Deploy
-    condition: eq( variables['Build.Repository.Name'], '${{ parameters.mainrepo }}')
+    condition: and( succeeded(), eq( System.PullRequest.IsFork, 'False')
+      or( startsWith( variables['Build.SourceBranch'], 'refs/head/')),
+      contains( variables['Build.SourceVersionMessage'], 'tagtest'))
