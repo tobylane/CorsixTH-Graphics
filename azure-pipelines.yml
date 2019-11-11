@@ -1,5 +1,5 @@
 #
-# Deploy: Full success on main/master: docs to github pages, announce to irc
+# Deploy: Full success on main/master: docs to github pages, announce to irc?
 # Release: Deploy plus tag: draft release notes?, package?
 # Failure: not pr (unless marked RDY?): report
 ---
@@ -19,11 +19,21 @@ steps:
     persistCredentials: true
   - script: sudo apt-get install bison flex
     displayName: Install requirements
-  - bash: cd $(Build.SourcesDirectory)/AnimationEncoder; VERBOSE=1 make
+  - bash: |
+      cd $(Build.SourcesDirectory)/AnimationEncoder
+      VERBOSE=1 CXXFLAGS="-Wall -Wextra -pedantic" make
     displayName: Build
   - bash: cd $(Build.SourcesDirectory)/AnimationEncoder; make test
     displayName: Test
     continueOnError: true
+
+  # Tags trigger second build.
+  - script: echo Deploy
+    condition: and( succeeded(),
+      eq( variables['System.PullRequest.IsFork'], 'False'),
+      or( startsWith( variables['Build.sourceBranch'], 'refs/tag/'),
+        eq( variables['Build.SourceBranch'], 'refs/heads/pipelines') ) )
+    displayName: Deploy
   - template: templates/deploy.yml
     parameters:
       path: AnimationEncoder/encoder
@@ -33,17 +43,10 @@ steps:
       target: docs
       path: doc/html/
       frontpage: README.md  # Add link to generated docs to this readme
-  # Tags trigger second build.
-  - script: echo Deploy
-    condition: and( succeeded(),
-      eq( variables['System.PullRequest.IsFork'], 'False'),
-      or( startsWith( variables['Build.sourceBranch'], 'refs/tag/'),
-        eq( variables['Build.SourceBranch'], 'refs/heads/pipelines') ) )
-    displayName: Deploy
-  - script: ls -R
-    condition: and( succeeded(), startsWith( variables['Build.sourceBranch'], 'refs/heads/'))
-    # heads > tag
-    displayName: Release
-  - script: ls -R
-    condition: and( failed(), eq( variables['System.PullRequest.IsFork'], 'False'))
-    displayName: Failure
+  - template: templates/deploy2.yml
+    parameters:
+      connection: release
+      path: AnimationEncoder/encoder
+    # condition: and( succeeded(),
+    #  startsWith( variables['Build.sourceBranch'], 'refs/heads/'))  # heads>tag
+    # displayName: Release

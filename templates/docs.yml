@@ -3,6 +3,7 @@
 # Use as, https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops#using-other-repositories
 # Todo: upload to different repo (sameorg/samerepo:gh-pages or sameorg/github.io:master)
 # maybe parameter for matching branches (ie master to main docs, dev to dev docs)
+# prep step eg script paramater to run cmake, install ldocgen
 # - checkout: self  # Must be first in this file
 #    persistCredentials: true
 # - template: templates/docs.yml
@@ -14,14 +15,14 @@ parameters:
   target: 'doc'
   frontpage: '/DoxyGen/index.md'
   email: 'botty@mc.botface'
-  name: 'Deploy bot'
+  name: 'Docs bot'
   prefix: 'Documentation from commit'
 
 steps:
   - bash: |
-      if [ $(Agent.OS) = "Windows NT" ]
+      if [ $(Agent.OS) = "Windows_NT" ]
       then choco install doxygen.install pandoc
-      elif [ $(Agent.OS) = "macOS" ]
+      elif [ $(Agent.OS) = "Darwin" ]
       then brew install doxygen pandoc
       elif [ $(Agent.OS) = "Linux" ]
       then sudo apt-get install doxygen pandoc
@@ -30,26 +31,25 @@ steps:
   - bash: |
       cd $(Build.SourcesDirectory)/${{ parameters.makepath }}
       make ${{ parameters.target }}
-      if [ -e ${{ parameters.frontpage }} ] # but not default?
-        then pandoc -f markdown -t html -o $(Build.SourcesDirectory)/${{ parameters.path }}/index.html \
-          $(Build.SourcesDirectory)/${{ parameters.frontpage }} || true
+      if [ -e ${{ parameters.frontpage }} ]
+        then pandoc -f markdown -s $(Build.SourcesDirectory)/${{ parameters.frontpage }} -t html \
+          -o $(Build.SourcesDirectory)/${{ parameters.path }}/${{ parameters.target }}/index.html
       fi
     displayName: Docs - Build
 
   - bash: |
-     if [ $(Build.Repository.Name) = "${{ parameters.mainrepo }}" ] && [ $(Build.SourceBranch) = refs/tags/* ] || true
-       then commit="$(git rev-parse --short HEAD)"
-       git config --global user.email "${{ parameters.email }}"
-       git config --global user.name "${{ parameters.name }}"
-       git reset --hard HEAD || true
-       cd $(Build.SourcesDirectory)
-       git checkout gh-pages
-       mv ${{ parameters.makepath }}/${{ parameters.path }}/* .
-       rm -rf ${{ parameters.makepath }}/
-       git add .
-       git commit -m "${{ parameters.prefix }} $commit [skip ci]" && git push --force origin HEAD:refs/heads/gh-pages \
-        || echo "No update"
-     fi
+     set -eux
+     commit="$(git rev-parse --short HEAD)"
+     git config --global user.email "${{ parameters.email }}"
+     git config --global user.name "${{ parameters.name }}"
+     cd $(Build.SourcesDirectory)
+     git checkout --force gh-pages
+     git reset --hard HEAD || true
+     rsync ${{ parameters.makepath }}/${{ parameters.path }}/* .
+     rm -rf ${{ parameters.makepath }}/
+     git add .
+     git commit -m "${{ parameters.prefix }} $commit [skip ci]" && git push --force origin HEAD:refs/heads/gh-pages \
+      || echo "No update"
     displayName: Docs - Deploy
     condition: and( succeeded(), eq( variables['System.PullRequest.IsFork'], 'False'),
       or( startsWith( variables['Build.SourceBranch'], 'refs/head/'),
