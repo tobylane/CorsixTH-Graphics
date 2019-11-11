@@ -72,7 +72,7 @@ steps:
     displayName: Deploy - Platform specific packaging
     continueOnError: true
     # upload these packages?
-  - upload: *.zip  # *.nsi *.dmg
+  - publish: '*.zip *.nsi *.dmg'
     continueOnError: true
     # list all files, with continueonerror?
 # Custom steps:

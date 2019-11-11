@@ -10,6 +10,7 @@ parameters:
   path: 'fresh'
 
 steps:
+  - task: DownloadPipelineArtifact@2
   - bash: |
        openssl dgst -sha256 ${{ parameters.path }} > sha256 || true
        git archive -o archive.zip HEAD
