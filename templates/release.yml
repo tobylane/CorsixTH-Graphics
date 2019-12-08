@@ -1,12 +1,14 @@
-# Template to download all uploaded assets of current run and make the github release
+# tobylane/Azure-Templates/release.yml for Azure Pipelines
+# Download all the assets of the current build and make a github release
 # Find all assets from this run, or blindly look for certain names based on the name script?
 # Or can the first script make a global list? Or this script, as assets are avaliable by default
-# use: template: deploy2.yml
+# todo: checksums, signing,
+# use: template: release.yml
 # dependsOn: steps where deploy.yml was used
 # github, or given, named of https://docs.microsoft.com/en-us/azure/devops/pipelines/library/service-endpoints?view=azure-devops&tabs=yaml#sep-github
 ---
 parameters:
-  connection: 'github'  # try this, then username/org then github?
+  connection: 'github'
   path: 'fresh'
 
 steps:
@@ -15,17 +17,17 @@ steps:
        openssl dgst -sha256 ${{ parameters.path }} > sha256 || true
        git archive -o archive.zip HEAD
        openssl dgst -sha256 archive.zip > zip.sha256
-       # pgp sign with secret
-    displayName: Deploy - Checksum/Signing
+       # if secret; pgp sign with secret
+    displayName: Deploy - Checksum/Sign
     timeoutInMinutes: 1
-    # condition: secret known
-  # - bash: prepare releasenotes? put tag in var. make list of all assets from the dependancy tasks
-  # like Windows_NT.zip Darwin.zip Linux.zip *.nsi *.dmg sha256 source.tar.gz.asc source.tar.gz.pgp
+  - bash: |
+       #prepare releasenotes? put tag in var. make list of all assets from the dependancy tasks
+       #like Windows_NT.zip Darwin.zip Linux.zip *.nsi *.dmg sha256 source.tar.gz.asc source.tar.gz.pgp
   - task: GitHubRelease@1  # Reports successful when there were no tags to act on
     condition: and( succeeded(), eq( variables['System.PullRequest.IsFork'], 'False'),
       or( startsWith( variables['Build.SourceBranch'], 'refs/head/'),
       contains( variables['Build.SourceVersionMessage'], 'tagtest')))
-    displayName: Deploy - Github release drafting
+    displayName: Deploy - Github release draft
     inputs:
       gitHubConnection: ${{ parameters.connection }}
       # tagSource: userSpecifiedTag

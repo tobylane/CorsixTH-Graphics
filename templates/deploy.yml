@@ -1,18 +1,19 @@
 # Template to compress given path to a filename based on prefix, date,
 #   platform, repo, branch, if pr, git short ref and upload
-# Todo: platform specific packages (nsis script location, dmg background path), checksums, signing,
-#   url: https://transfer.sh https://0x0.st/ etc, format: tricky to deal with tar types
+# Todo: url: https://transfer.sh https://0x0.st/ etc, format: tricky to deal with tar types
 #   Upload assets from each OS to azure
-# Use as
+# Use as, eg windows
 # - template: templates/deploy.yml  # Template reference
 #  parameters:
-#    path: mac /fresh/CorsixTH/ windows /build/CorsixTH/RelWithDebInfo/
-#    prefix: 'Cth'
+#    path: '/build/CorsixTH/RelWithDebInfo/'
+#    prefix: 'CTH'
+#    build_script: 'makensis.exe /V4 WindowsInstaller/Win32Script.nsi'
 ---
 parameters:
   prefix: 'build'
   path: 'fresh'
-  NSIS: 'WindowsInstaller/Win32Script.nsi'
+  requirements: ''  # package; git clone repo
+  build_script: ''  # fpm, dmg create, makensis.exe
 
 steps:
   - task: UseRubyVersion@0
@@ -20,12 +21,18 @@ steps:
     displayName: Docs - Install Ruby
   - bash: |
       if [ $(Agent.OS) = "Windows_NT" ]
-      then choco install
+      then choco install ${{ parameters.requirements }}
       elif [ $(Agent.OS) = "Darwin" ]
       then git clone https://github.com/colinjmatt/MacOS-DMG-Creator
         chmod +x MacOS-DMG-Creator/dmg-create
+        if [ ${{ parameters.requirements }} ]
+          then brew install ${{ parameters.requirements }}
+        fi
       elif [ $(Agent.OS) = "Linux" ]
       then echo gem install fpm
+        if [ ${{ parameters.requirements }} ]
+          then sudo apt-get install ${{ parameters.requirements }}
+        fi
       fi
     displayName: Docs - Install requirements
   - bash: |
@@ -39,14 +46,14 @@ steps:
       fi
       name="${{ parameters.prefix }}-$(date +"%Y%m%d")-${name//'/'/'-'}-$(Agent.OS).zip";
       echo '##vso[task.setvariable variable=name;isOutput=true]$name'
-    displayName: Deploy - Naming
+    displayName: Deploy - Name
     name: Naming
   - task: ArchiveFiles@2
     inputs:
       rootFolderOrFile: '$(Build.SourcesDirectory)/${{ parameters.path }}'
       archiveFile: '$(Agent.OS).zip'
       verbose: true
-    displayName: Deploy - Archiving
+    displayName: Deploy - Archive
   - task: cURLUploader@2
     inputs:
       enabled: false
@@ -56,25 +63,14 @@ steps:
       remotePath:
       timeoutInMinutes: 1
       continueOnError: true
-    displayName: Deploy - Uploading archive
+    displayName: Deploy - Upload archive
 
-  - bash: |
-      if [ $(Agent.OS) = "Windows_NT" ]
-      then makensis.exe /V4 ${{ parameters.NSIS }}
-      elif [ $(Agent.OS) = "Darwin" ]
-      then dmg-create --background CorsixTH/build_files/CthDmgBackground.png --volname "$name" \
-        --volicon CorsixTH/CorsixTH/Icon.icns --icon-size 48 --window-size 600 337 --text-size 12 \
-        --icon CorsixTH 76 151 --app-drop-link 224 151 $(name)".dmg" $(Build.SourcesDirectory)/${{ parameters.path }}
-      elif [ $(Agent.OS) = "Linux" ]
-      then echo fpm help
-        openssl dgst -sha256 $(Build.SourcesDirectory)/${{ parameters.path }} > sha256 || true
-      fi
+  - bash: ${{ parameters.build_script }}
     displayName: Deploy - Platform specific packaging
     continueOnError: true
-    # upload these packages?
-  - publish: '*.zip *.nsi *.dmg'
+  - publish: '${{ parameters.path }} *.zip *.nsi *.dmg'
     continueOnError: true
-    # list all files, with continueonerror?
+    # only if release conditions?
 # Custom steps:
 #  - ${{ if parameters['job_post-steps'] }}:
 #    - ${{ parameters['job_post-steps'] }}

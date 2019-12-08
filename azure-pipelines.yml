@@ -22,8 +22,9 @@ steps:
   - bash: |
       cd $(Build.SourcesDirectory)/AnimationEncoder
       VERBOSE=1 CXXFLAGS="-Wall -Wextra -pedantic" make
+      make help
     displayName: Build
-  - bash: cd $(Build.SourcesDirectory)/AnimationEncoder; make test
+  - bash: pwd; cd $(Build.SourcesDirectory)/AnimationEncoder; make test
     displayName: Test
     continueOnError: true
 
@@ -34,19 +35,21 @@ steps:
       or( startsWith( variables['Build.sourceBranch'], 'refs/tag/'),
         eq( variables['Build.SourceBranch'], 'refs/heads/pipelines') ) )
     displayName: Deploy
-  - template: templates/deploy.yml
-    parameters:
-      path: AnimationEncoder/encoder
   - template: templates/docs.yml
     parameters:
       makepath: AnimationEncoder
       target: docs
       path: doc/html/
       frontpage: README.md  # Add link to generated docs to this readme
-  - template: templates/deploy2.yml
+  - template: templates/deploy.yml
     parameters:
-      connection: release
       path: AnimationEncoder/encoder
+      requirements: --version
+      build_script: touch AnimationEncoder/encoder
+  - template: templates/release.yml
     # condition: and( succeeded(),
     #  startsWith( variables['Build.sourceBranch'], 'refs/heads/'))  # heads>tag
     # displayName: Release
+    parameters:
+      connection: release
+      path: AnimationEncoder/encoder

@@ -1,15 +1,14 @@
-# Template to build docs and on tag, requires trigger on tags, deploy them to gh-pages
-# May need https://www.aaron-powell.com/posts/2019-05-24-azure-pipeline-templates-and-parameters/
-# Use as, https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops#using-other-repositories
+# Template to build docs and deploy them to gh-pages (ie docs of HEAD not of tag)
 # Todo: upload to different repo (sameorg/samerepo:gh-pages or sameorg/github.io:master)
-# maybe parameter for matching branches (ie master to main docs, dev to dev docs)
-# prep step eg script paramater to run cmake, install ldocgen
+# maybe parameter for matching branches (ie master to git head docs, dev to dev docs, tags to main docs)
 # - checkout: self  # Must be first in this file
 #    persistCredentials: true
 # - template: templates/docs.yml
 #    parameters:
 ---
 parameters:
+  build_script: ''  # cmake to generate makefile
+  post_publish_script: ''
   makepath: 'build'
   path: 'doc/html'
   target: 'doc'
@@ -17,6 +16,7 @@ parameters:
   email: 'botty@mc.botface'
   name: 'Docs bot'
   prefix: 'Documentation from commit'
+  publish_condition: ''  # eq( variables['System.PullRequest.IsFork'], 'False')
 
 steps:
   - bash: |
@@ -29,6 +29,7 @@ steps:
       fi
     displayName: Docs - Install requirements
   - bash: |
+      ${{ parameters.build_script }}
       cd $(Build.SourcesDirectory)/${{ parameters.makepath }}
       make ${{ parameters.target }}
       if [ -e ${{ parameters.frontpage }} ]
@@ -50,7 +51,5 @@ steps:
      git add .
      git commit -m "${{ parameters.prefix }} $commit [skip ci]" && git push --force origin HEAD:refs/heads/gh-pages \
       || echo "No update"
-    displayName: Docs - Deploy
-    condition: and( succeeded(), eq( variables['System.PullRequest.IsFork'], 'False'),
-      or( startsWith( variables['Build.SourceBranch'], 'refs/head/'),
-      contains( variables['Build.SourceVersionMessage'], 'tagtest')))
+    displayName: Docs - Publish
+    condition: ${{ parameters.publish_condition }}
