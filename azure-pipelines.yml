@@ -33,7 +33,7 @@ steps:
     condition: and( succeeded(),
       eq( variables['System.PullRequest.IsFork'], 'False'),
       or( startsWith( variables['Build.sourceBranch'], 'refs/tag/'),
-        eq( variables['Build.SourceBranch'], 'refs/heads/pipelines') ) )
+        eq( variables['Build.SourceBranch'], 'refs/heads/all') ) )
     displayName: Deploy
   - template: templates/docs.yml
     parameters:
@@ -45,7 +45,7 @@ steps:
     parameters:
       path: AnimationEncoder/encoder
       requirements: --version
-      build_script: touch AnimationEncoder/encoder
+      build_script: echo touch AnimationEncoder/encoder
   - template: templates/release.yml
     # condition: and( succeeded(),
     #  startsWith( variables['Build.sourceBranch'], 'refs/heads/'))  # heads>tag

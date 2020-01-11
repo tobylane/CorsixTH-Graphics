@@ -45,7 +45,7 @@ steps:
       else name="$(git config remote.origin.url | cut -d'.' -f2 | cut -d':' -f2)-$(Build.SourceBranchName)-$ref"
       fi
       name="${{ parameters.prefix }}-$(date +"%Y%m%d")-${name//'/'/'-'}-$(Agent.OS).zip";
-      echo '##vso[task.setvariable variable=name]$name'
+      echo "##vso[task.setvariable variable=name]$name"
     displayName: Deploy - Name
     name: Naming
   - bash: |
