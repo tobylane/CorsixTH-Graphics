@@ -52,15 +52,16 @@ steps:
       env | grep NAME
       echo -
       echo $NAME - $(NAME)
+  # /${{ parameters.path }}
   - task: ArchiveFiles@2
     inputs:
-      rootFolderOrFile: '$(Build.SourcesDirectory)/${{ parameters.path }}'
+      rootFolderOrFile: '$(Build.SourcesDirectory)'
       archiveFile: '$(Agent.OS).zip'
       verbose: true
     displayName: Deploy - Archive
   - task: cURLUploader@2
     inputs:
-      enabled: false
+      enabled: true
       files: '$(Agent.OS).zip'
       url: 'https://transfer.sh/$(NAME)'
       authType: userAndPass
