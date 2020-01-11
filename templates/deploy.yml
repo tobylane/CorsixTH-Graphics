@@ -45,9 +45,13 @@ steps:
       else name="$(git config remote.origin.url | cut -d'.' -f2 | cut -d':' -f2)-$(Build.SourceBranchName)-$ref"
       fi
       name="${{ parameters.prefix }}-$(date +"%Y%m%d")-${name//'/'/'-'}-$(Agent.OS).zip";
-      echo '##vso[task.setvariable variable=name;isOutput=true]$name'
+      echo '##vso[task.setvariable variable=name]$name'
     displayName: Deploy - Name
     name: Naming
+  - bash: |
+      env | grep NAME
+      echo -
+      echo $NAME - $(NAME)
   - task: ArchiveFiles@2
     inputs:
       rootFolderOrFile: '$(Build.SourcesDirectory)/${{ parameters.path }}'
@@ -58,7 +62,7 @@ steps:
     inputs:
       enabled: false
       files: '$(Agent.OS).zip'
-      url: 'https://transfer.sh/$(Naming.name)'
+      url: 'https://transfer.sh/$(NAME)'
       authType: userAndPass
       remotePath:
       timeoutInMinutes: 1
@@ -68,8 +72,8 @@ steps:
   - bash: ${{ parameters.build_script }}
     displayName: Deploy - Platform specific packaging
     continueOnError: true
-  - publish: '${{ parameters.path }} *.zip *.nsi *.dmg'
-    continueOnError: true
+  #- publish: '${{ parameters.path }} *.zip *.nsi *.dmg'
+  #  continueOnError: true # because https://github.com/MicrosoftDocs/vsts-docs/issues/6762
     # only if release conditions?
 # Custom steps:
 #  - ${{ if parameters['job_post-steps'] }}:
