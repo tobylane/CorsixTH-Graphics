@@ -1,0 +1,48 @@
+---
+name: Linux and Tests
+
+on:  # yamllint disable-line rule:trurhy
+  push:
+    branches-ignore:
+      - 'gh-pages'
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install requirements
+      run: |
+        sudo apt-get install bison flex doxygen yamllint
+        sudo pip3 install -I codespell==2.0
+    - name: Build AnimationEncoder
+      run: |
+        cd AnimationEncoder
+        VERBOSE=1 CXXFLAGS="-Wall -Wextra -pedantic" make
+        make help
+    - name: Test AnimationEncoder
+      run: cd AnimationEncoder; make test
+    - name: Test code
+      run: |
+        codespell --enable-colors --quiet-level 2 -L ba,currenty,inout .
+        yamllint --config-data "rules: {line-length: disable}" .github/workflows/Linux.yml
+    - name: Generate documentation
+      run: |
+        cd AnimationEncoder
+        make docs
+    - name: Upload documentation
+      if: github.ref == 'refs/heads/master' && github.repository == 'CorsixTH/CorsixTH-Graphics'
+      run: |
+        git config user.email "documentationbot@corsixth.com"
+        git config user.name "Docs Bot"
+        git fetch origin gh-pages || git checkout --orphan gh-pages
+        git checkout --force gh-pages
+        rsync --recursive AnimationEncoder/doc/html/ .
+        git add .
+        if ! git diff --cached --exit-code; then
+          git commit --message "Documentation from $(git rev-parse --short master) [no CI]"
+          git push origin gh-pages
+        else
+          echo "No change to documentation."
+        fi
