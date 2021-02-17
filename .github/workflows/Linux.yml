@@ -9,6 +9,7 @@ on:  # yamllint disable-line rule:trurhy
 
 jobs:
   build:
+    name: Build and test
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -32,7 +33,7 @@ jobs:
         cd AnimationEncoder
         make docs
     - name: Upload documentation
-      if: github.ref == 'refs/heads/master' && github.repository == 'CorsixTH/CorsixTH-Graphics'
+      if: github.ref == 'refs/heads/actions' && github.repository == 'tobylane/CorsixTH-Graphics'
       run: |
         git config user.email "documentationbot@corsixth.com"
         git config user.name "Docs Bot"
